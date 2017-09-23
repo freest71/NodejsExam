@@ -19,7 +19,7 @@ var ejs = require('ejs');
 var jade = require('jade');
 http.createServer(function(req,res){
 	if (req.method == 'GET'){
-		console.log(req.url+" GET");
+		console.log(req.url+" GET Request");
 		if (req.url == '/') {
 			fs.readFile('index.html', function(err,data) {
 				if (!err){
