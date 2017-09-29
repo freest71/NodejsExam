@@ -24,7 +24,7 @@ app.get('/',function(req,res){
 });
 app.post('/logout',function(req,res){
 	res.clearCookie('auth');
-	res.redirect('/');
+	res.redirect('/');  //redirect()은 무조건 get방식이다.
 });
 app.get('/login',function(req,res){
 	fs.readFile(__dirname+'/public/login.html',
@@ -40,6 +40,7 @@ app.get('/login',function(req,res){
 app.post('/login',function(req,res){
 	var username = req.body.username;
 	var password = req.body.password;
+	//hash로 인코딩값으로 비교
 	if (username == 'hong' && password == '1234'){
 		res.cookie('auth',true);
 		res.redirect('/');		
