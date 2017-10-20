@@ -8,11 +8,24 @@
 		<tr>
 			<td width="200">
 				1. User List API
-				GET /user
+				<BR>GET /user
 			</td>
 			<td>
 				<form method="GET" action="/user">
 					<input type="submit" name="">
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				2. User Image Upload API
+				<BR>POST /user/picture
+			</td>
+			<td>
+				<form method="POST" action="/user/picture" enctype="multipart/form-data">
+					<li>Image file : <input type="file" name="image">
+					<li>Description : <input type="text" name="description">
+					<br><input type="submit" value="Send">
 				</form>
 			</td>
 		</tr>
