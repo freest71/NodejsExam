@@ -192,10 +192,14 @@ app.get('/user/:id',function(req,res){
 	//res.send(JSON.stringify({api:'get user info', id:req.params.id}));
 	*/
 });
-app.post('/user',function(req,res) {
+var crypto = require('crypto');
+app.post('/user',function(req,res) {	
+	var password = req.body.password;
+	var hash = crypto.createHash('sha256').update(password).digest('base64');
+
 	connection.query(
-		'insert into user(name,age) values(?,?)',
-		[req.body.name, req.body.age],
+		'insert into user(user_id,password,name,age) values(?,?,?,?)',
+		[req.body.user_id, hash, req.body.name, req.body.age],
 		function(err, result){
 			if (err) {
 				res.send(JSON.stringify(err));
@@ -212,6 +216,66 @@ app.post('/user',function(req,res) {
 	users.push(obj);
 	//res.send(JSON.stringify({api:'add user info'}));
 	res.send(JSON.stringify({result:true, api:'add user info'})); */
+});
+var jwt = require('json-web-token');
+app.post('/user/login',function(req,res){
+	var password = req.body.password;
+	var hash = crypto.createHash('sha256').update(password).digest('base64');
+	connection.query(
+		'select id from user where user_id=? and password=?',
+		[req.body.user_id, hash], function(err, results, fields) {
+			if (err) {
+				res.send(JSON.stringify(err));
+			} else {
+				if (results.length > 0) {//조건만족 -> 로그인 성공
+					var cur_date = new Date();
+					var settingAddHeaders = {
+						payload: {
+							"iss":"shinhan",
+							"aud":"mobile",
+							"iat":cur_date.getTime(),
+							"typ":"/online/transactionstatus/v2",
+							"request":{
+								"myTransactionId":req.body.user_id,
+								"merchantTransactionId":hash,
+								"status":"SUCCESS"
+							}
+						},
+						header:{
+							kid:'abcdefghijklmnopqrstuvwxyz1234567890'
+						}
+					};
+					var secret = "SHINHANMOBILETOPSECRET!!!!!!";
+					jwt.encode(secret, settingAddHeaders,
+						function(err, token) {
+							if (err) {
+								res.send(JSON.stringify(err));
+							} else {
+								var tokens = token.split(".");  //토큰을 잘라서 일부만 사용할때
+								connection.query(
+									'insert into user_login('+
+									'token,user_real_id) values(?,?)',
+									[tokens[2], results[0].id],
+									function(err,result) {
+										if (err) {
+											res.send(JSON.stringify(err));
+										} else {
+											res.send(JSON.stringify({
+												result:true,
+												token:tokens[2],
+												db_result:result
+											}));
+										}
+
+									});
+								//res.send(JSON.stringify({result:true,token:tokens[2]}));
+							}
+						})
+				} else { //조건불만족 -> 로그인 실패
+					res.send(JSON.stringify({result:false}));
+				}
+			}
+		});
 });
 app.put('/user/:id',function(req,res){
 	connection.query(
